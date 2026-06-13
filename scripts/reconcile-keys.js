@@ -28,6 +28,8 @@ async function main() {
   const orphans = appKeys.filter((k) => !dbHashes.has(k.hash));
   const dangling = dbRows.filter((r) => r.openrouter_key_hash && !orHashes.has(r.openrouter_key_hash));
 
+  // Conservative window: the generate-key action self-reclaims at 2 min; report
+  // only rows older than that so genuinely in-flight reservations aren't flagged.
   const tenMinAgo = Date.now() - 10 * 60 * 1000;
   const stalePending = dbRows.filter(
     (r) => r.status === "pending" && new Date(r.created_at).getTime() < tenMinAgo,

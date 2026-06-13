@@ -17,6 +17,8 @@ import { createKey, deleteKey } from "@/lib/openrouter/provisioning-client";
 
 // A pending row older than this is treated as an interrupted mint and reclaimed,
 // so a crashed/timed-out request can never permanently lock a user out.
+// Aggressive (mints take seconds); reconcile-keys.js only *reports* at a more
+// conservative 10 min to avoid flagging genuinely in-flight reservations.
 const STALE_PENDING_MS = 2 * 60 * 1000;
 
 /**
@@ -63,7 +65,9 @@ export async function generateKey() {
   }
 
   // Authoritative ceiling re-check: closes the concurrent-overshoot gap (our own
-  // pending row is now counted). Free the reservation if we tipped over.
+  // pending row is now counted). The `>` here is intentional — the pre-reserve
+  // check above uses `>=` to reject at the cap, whereas here our own pending row
+  // is already counted, so reject only when it pushed the total strictly over.
   if (maxKeys > 0 && (await repo.countLiveKeys()) > maxKeys) {
     await repo.deletePending(reservedId);
     return { status: "error", message: "We've reached the current key limit. Please try again later." };
