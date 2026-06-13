@@ -76,8 +76,10 @@ export async function generateKey() {
  * Resolve a reserve() conflict: existing active key, reclaimable stale pending,
  * or an in-progress request.
  *
+ * Returns either a fresh reservation id to mint against, or a terminal result.
+ *
  * @param {{ githubUserId: string, githubUsername: string }} identity
- * @returns {Promise<{ reclaimedId?: string, result: GenerateKeyResult }>}
+ * @returns {Promise<{ reclaimedId?: string, result?: GenerateKeyResult }>}
  */
 async function resolveConflict(identity) {
   const row = await repo.findByGithubUserId(identity.githubUserId);
@@ -88,7 +90,7 @@ async function resolveConflict(identity) {
   if (row && isStale(row.created_at, STALE_PENDING_MS)) {
     await repo.deletePending(row.id);
     const retryId = await repo.reserve(identity.githubUserId, identity.githubUsername);
-    if (retryId) return { reclaimedId: retryId, result: { status: "error" } };
+    if (retryId) return { reclaimedId: retryId };
   }
   return {
     result: { status: "error", message: "A key request is already in progress. Try again shortly." },

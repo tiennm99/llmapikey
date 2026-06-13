@@ -52,6 +52,12 @@ header.site-header {
   color: var(--text);
 }
 
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);

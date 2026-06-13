@@ -23,7 +23,7 @@ export async function SiteHeader() {
       <Link href="/" className="brand">
         llmapikey
       </Link>
-      <nav style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+      <nav className="site-nav">
         <Link href="/docs">Docs</Link>
         {username ? (
           <>

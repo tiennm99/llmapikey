@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 /**
- * Root layout. The session-aware header is added in Phase 3.
+ * Root layout wrapping every page with the session-aware site header.
  *
  * @param {{ children: React.ReactNode }} props
  */
