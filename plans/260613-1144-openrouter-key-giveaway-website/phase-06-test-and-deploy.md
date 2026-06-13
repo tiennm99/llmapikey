@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Test and Deploy"
-status: pending
+status: code-complete (live E2E + prod deploy deferred to post-Phase-1)
 priority: P2
 effort: "0.5d"
 dependencies: [5]

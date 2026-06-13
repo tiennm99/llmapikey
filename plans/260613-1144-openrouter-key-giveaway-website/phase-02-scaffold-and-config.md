@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Scaffold and Config"
-status: pending
+status: code-complete
 priority: P1
 effort: "0.5d"
 dependencies: [1]

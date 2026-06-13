@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "GitHub OAuth Auth Flow"
-status: pending
+status: code-complete
 priority: P1
 effort: "0.5d"
 dependencies: [2]

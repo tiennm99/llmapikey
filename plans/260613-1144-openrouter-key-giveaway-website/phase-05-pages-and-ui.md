@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Pages and UI"
-status: pending
+status: code-complete
 priority: P2
 effort: "1d"
 dependencies: [4]

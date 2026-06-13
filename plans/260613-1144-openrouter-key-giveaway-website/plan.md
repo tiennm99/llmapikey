@@ -30,12 +30,39 @@ Next.js (App Router, JS + JSDoc) site on Vercel. Gives developers a $10/day-capp
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [ToS Approval Gate](./phase-01-tos-approval-gate.md) | Pending |
-| 2 | [Scaffold and Config](./phase-02-scaffold-and-config.md) | Pending |
-| 3 | [GitHub OAuth Auth Flow](./phase-03-github-oauth-auth-flow.md) | Pending |
-| 4 | [Key Provisioning](./phase-04-key-provisioning.md) | Pending |
-| 5 | [Pages and UI](./phase-05-pages-and-ui.md) | Pending |
-| 6 | [Test and Deploy](./phase-06-test-and-deploy.md) | Pending |
+| 1 | [ToS Approval Gate](./phase-01-tos-approval-gate.md) | Pending (BLOCKING — not started) |
+| 2 | [Scaffold and Config](./phase-02-scaffold-and-config.md) | Code complete |
+| 3 | [GitHub OAuth Auth Flow](./phase-03-github-oauth-auth-flow.md) | Code complete |
+| 4 | [Key Provisioning](./phase-04-key-provisioning.md) | Code complete |
+| 5 | [Pages and UI](./phase-05-pages-and-ui.md) | Code complete |
+| 6 | [Test and Deploy](./phase-06-test-and-deploy.md) | Code+tests done; live E2E + deploy deferred |
+
+## Implementation Status (2026-06-13)
+
+Built code-only at user direction ("just build, I won't deploy yet"); Phase 1
+ToS gate intentionally NOT cleared, live minting gated behind
+`PROVISIONING_ENABLED=false`, Vercel auto-deploy disabled (`vercel.json`).
+
+**Build/test:** `next build` green (7 routes); `npm test` 6 pass / 1 skip (RLS
+test needs live Supabase). Code review: all 8 acceptance criteria verified; 2
+HIGH lifecycle bugs found and fixed (stuck-pending lockout recovery; kill-switch
+now counts pending+active with post-reserve re-check).
+
+**Deviation from plan (Phase 2):** the `api_keys` table is reached via a direct
+Postgres connection (`postgres` npm + `DATABASE_URL`), NOT the service-role
+supabase-js client. Reason: the plan required the `llmapikey` schema to stay
+unexposed to PostgREST, but supabase-js cannot query an unexposed schema. Direct
+PG keeps the schema fully hidden (a stronger realization of the same intent) and
+removes the service-role blast-radius concern. Env vars changed accordingly:
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`
+(no `SUPABASE_SERVICE_ROLE_KEY`).
+
+**Still requires (post-Phase-1, before public launch):** apply migration to a
+real DB, register GitHub OAuth app + Supabase provider, set live env +
+`PROVISIONING_ENABLED=true`, run the RLS deny-all test against real Supabase,
+create→delete round-trip on a throwaway key, manual E2E (sign-in → generate →
+call model → re-generate idempotent → concurrent double-submit = one key),
+dashboard verification (limit/daily-reset/BYOK), and function-log redaction grep.
 
 ## Dependencies
 
