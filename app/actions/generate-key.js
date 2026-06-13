@@ -3,9 +3,8 @@
 import "server-only";
 
 import { getCurrentGithubIdentity } from "@/lib/auth/current-github-identity";
-import { last4 } from "@/lib/keys/key-format";
 import * as repo from "@/lib/keys/api-keys-repository";
-import { createKey, deleteKey } from "@/lib/openrouter/provisioning-client";
+import { mintAndPersist, numEnv } from "@/lib/keys/mint-key";
 
 /**
  * @typedef {Object} GenerateKeyResult
@@ -102,56 +101,6 @@ async function resolveConflict(identity) {
 }
 
 /**
- * Mint then persist, compensating on either failure.
- *
- * @param {string} reservedId
- * @param {string} githubUserId
- * @returns {Promise<GenerateKeyResult>}
- */
-async function mintAndPersist(reservedId, githubUserId) {
-  let mint;
-  try {
-    mint = await createKey({
-      name: `llmapikey:${githubUserId}`, // opaque numeric id — no PII into OpenRouter logs
-      limitUsd: numEnv("KEY_DAILY_LIMIT_USD", 10),
-      resetPeriod: "daily",
-      includeByok: true,
-      expiresAt: expiryIso(numEnv("KEY_EXPIRY_DAYS", 90)),
-    });
-  } catch {
-    await repo.deletePending(reservedId); // free the reservation; no orphan key exists
-    return { status: "error", message: "Could not create your key. Please try again." };
-  }
-
-  try {
-    await repo.activate(reservedId, { hash: mint.hash, hint: last4(mint.key) });
-  } catch {
-    try {
-      await deleteKey(mint.hash); // avoid an orphaned billable key
-    } catch {
-      // best-effort; reconcile-keys.js will surface any leak
-    }
-    await repo.deletePending(reservedId);
-    return { status: "error", message: "Could not save your key. Please try again." };
-  }
-
-  // Raw key returned for one-time display. Never logged or re-persisted.
-  return { status: "created", rawKey: mint.key, keyHint: last4(mint.key) };
-}
-
-/**
- * Parse a numeric env var, falling back if missing or malformed.
- *
- * @param {string} name
- * @param {number} fallback
- * @returns {number}
- */
-function numEnv(name, fallback) {
-  const n = Number(process.env[name]);
-  return Number.isFinite(n) && n >= 0 ? n : fallback;
-}
-
-/**
  * @param {string|Date} createdAt
  * @param {number} maxAgeMs
  * @returns {boolean}
@@ -159,14 +108,4 @@ function numEnv(name, fallback) {
 function isStale(createdAt, maxAgeMs) {
   const t = new Date(createdAt).getTime();
   return Number.isFinite(t) && Date.now() - t > maxAgeMs;
-}
-
-/**
- * ISO timestamp `days` in the future for the key's expires_at.
- *
- * @param {number} days
- * @returns {string}
- */
-function expiryIso(days) {
-  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 }

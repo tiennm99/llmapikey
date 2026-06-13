@@ -29,6 +29,12 @@ each capped at a daily USD limit. Key records live in a dedicated, unexposed
   before minting, so concurrent double-submits yield exactly one OpenRouter key.
 - **Schema isolation:** `llmapikey` is NOT added to PostgREST exposed schemas;
   RLS is deny-all as defense in depth.
+- **Admin console:** route `/admin` (unlisted — no nav link) lists, searches,
+  filters, revokes, and manually mints keys. Access is gated by the
+  `ADMIN_GITHUB_USER_IDS` allowlist against the same numeric `provider_id`
+  anchor; non-admins get `notFound()` (a 404, never a redirect that would leak
+  the route's existence). Every admin server action re-checks the allowlist
+  server-side, so the page gate is defense-in-depth only.
 
 ## Setup
 
@@ -49,6 +55,7 @@ each capped at a daily USD limit. Key records live in a dedicated, unexposed
    | `MAX_TOTAL_KEYS` | Kill-switch: stop minting past N active keys |
    | `KEY_DAILY_LIMIT_USD` | Per-key daily cap sent to OpenRouter |
    | `KEY_EXPIRY_DAYS` | Key lifetime (sets `expires_at`) |
+   | `ADMIN_GITHUB_USER_IDS` | Admin allowlist — numeric GitHub `provider_id`s, CSV (server-only) |
 3. **Database** — apply the migration to a **staging branch first**, then prod
    (Supabase SQL editor or `psql "$DATABASE_URL" -f ...`):
    ```bash
