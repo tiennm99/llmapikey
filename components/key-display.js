@@ -3,9 +3,8 @@
 import { useState } from "react";
 
 /**
- * One-time raw key display with a copy button and a prominent "shown once"
- * warning. After this render the key is gone (never re-fetchable) — v1 has no
- * recovery path, which is acceptable for a free key.
+ * Raw key display with a copy button. The key is stored and retrievable on the
+ * dashboard, so this renders both at creation and on return visits.
  *
  * @param {{ rawKey: string, model: string }} props
  */
@@ -24,7 +23,8 @@ export function KeyDisplay({ rawKey, model }) {
   return (
     <div className="panel">
       <p className="warn">
-        ⚠ Copy this key now — it is shown only once and cannot be recovered.
+        ⚠ Keep this key secret — treat it like a password. You can always copy it
+        again here on your dashboard.
       </p>
       <div className="key-box">
         <code>{rawKey}</code>

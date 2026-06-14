@@ -1,9 +1,9 @@
-import { maskFromHint } from "@/lib/keys/key-format";
 import { AdminKeyRowActions } from "./admin-key-row-actions";
 
 /**
- * Renders only safe columns: username, masked key hint, status, created date.
- * The `openrouter_key_hash` is NEVER rendered or serialized to the client.
+ * Admin table: username, full key, status, created date. The full raw key is
+ * shown here intentionally (admin-only, gated route). The delete handle
+ * (`openrouter_key_hash`) is never rendered.
  *
  * @param {{ rows: import('@/lib/keys/api-keys-repository').ApiKeyRow[] }} props
  */
@@ -33,7 +33,7 @@ export function AdminKeysTable({ rows }) {
             <tr key={row.id}>
               <td>@{row.github_username}</td>
               <td>
-                <code>{maskFromHint(row.key_hint)}</code>
+                <code>{row.openrouter_key ?? "—"}</code>
               </td>
               <td>{row.status}</td>
               <td className="muted">

@@ -9,8 +9,7 @@ import { mintAndPersist, numEnv } from "@/lib/keys/mint-key";
 /**
  * @typedef {Object} GenerateKeyResult
  * @property {"created"|"exists"|"error"} status
- * @property {string} [rawKey]   present only when status === "created" (shown once)
- * @property {string|null} [keyHint] last-4 hint for masked display
+ * @property {string|null} [rawKey] full key, present for "created" and "exists" (retrievable)
  * @property {string} [message]  human-friendly info/error
  */
 
@@ -35,10 +34,10 @@ export async function generateKey() {
     return { status: "error", message: "Sign in with GitHub first." };
   }
 
-  // Idempotency fast-path: existing active key → masked hint, never mint again.
+  // Idempotency fast-path: existing active key → return it, never mint again.
   const existing = await repo.findByGithubUserId(identity.githubUserId);
   if (existing && existing.status === "active") {
-    return { status: "exists", keyHint: existing.key_hint, message: "You already have a key." };
+    return { status: "exists", rawKey: existing.openrouter_key, message: "You already have a key." };
   }
 
   // Feature gate: live minting stays OFF until the OpenRouter ToS gate clears.
@@ -87,7 +86,7 @@ export async function generateKey() {
 async function resolveConflict(identity) {
   const row = await repo.findByGithubUserId(identity.githubUserId);
   if (row?.status === "active") {
-    return { result: { status: "exists", keyHint: row.key_hint, message: "You already have a key." } };
+    return { result: { status: "exists", rawKey: row.openrouter_key, message: "You already have a key." } };
   }
   // Pending row. If stale, an earlier mint was interrupted — reclaim and retry.
   if (row && isStale(row.created_at, STALE_PENDING_MS)) {

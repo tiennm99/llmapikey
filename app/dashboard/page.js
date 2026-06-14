@@ -25,10 +25,10 @@ export default async function DashboardPage() {
     );
   }
 
-  let existingHint = null;
+  let existingKey = null;
   try {
     const row = await repo.findByGithubUserId(identity.githubUserId);
-    if (row && row.status === "active") existingHint = row.key_hint;
+    if (row && row.status === "active") existingKey = row.openrouter_key;
   } catch {
     // DB not reachable (e.g. local without POSTGRES_URL) — show the panel; the
     // server action gates minting and reports a friendly error.
@@ -41,7 +41,7 @@ export default async function DashboardPage() {
     <main>
       <h1>Your key</h1>
       <p className="muted">Signed in as @{identity.githubUsername}.</p>
-      <GenerateKeyPanel existingHint={existingHint} model={model} repoUrl={repoUrl} />
+      <GenerateKeyPanel existingKey={existingKey} model={model} repoUrl={repoUrl} />
     </main>
   );
 }
