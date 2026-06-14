@@ -21,6 +21,27 @@ test("create-key body uses OpenRouter snake_case fields", () => {
   });
 });
 
+test("create-key body includes workspace_id when given, omits it otherwise", () => {
+  const scoped = buildCreateKeyBody({
+    name: "llmapikey/gh-12345",
+    limitUsd: 10,
+    resetPeriod: "daily",
+    includeByok: true,
+    expiresAt: "2026-09-11T00:00:00.000Z",
+    workspaceId: "33179556-3ab3-40a4-af8b-211d322aa94e",
+  });
+  assert.equal(scoped.workspace_id, "33179556-3ab3-40a4-af8b-211d322aa94e");
+
+  const unscoped = buildCreateKeyBody({
+    name: "x",
+    limitUsd: 5,
+    resetPeriod: "daily",
+    includeByok: false,
+    expiresAt: "2026-01-01T00:00:00.000Z",
+  });
+  assert.ok(!("workspace_id" in unscoped));
+});
+
 test("create-key body has no camelCase leakage", () => {
   const body = buildCreateKeyBody({
     name: "x",

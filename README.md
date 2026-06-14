@@ -61,6 +61,7 @@ each capped at a daily USD limit. Key records live in a dedicated, unexposed
    | `AUTH_SESSION_SECRET` | Session JWT signing secret, ≥32 bytes (`openssl rand -base64 48`) |
    | `POSTGRES_URL` | Supabase **transaction pooler** string (server-only; provisioned by the Supabase Vercel integration) |
    | `OPENROUTER_MANAGEMENT_KEY` | Master management/provisioning key (server-only) |
+   | `OPENROUTER_WORKSPACE_ID` | Workspace minted keys are created in (create-key `workspace_id`); omit for the management key's default |
    | `PROVISIONING_ENABLED` | `false` until Phase 1 ToS gate clears |
    | `MAX_TOTAL_KEYS` | Kill-switch: stop minting past N active keys |
    | `KEY_DAILY_LIMIT_USD` | Per-key daily cap sent to OpenRouter |
