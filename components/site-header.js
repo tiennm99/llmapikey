@@ -1,21 +1,18 @@
 import Link from "next/link";
 
-import { createServerAuthClient } from "@/lib/supabase/server-client";
+import { getCurrentGithubIdentity } from "@/lib/auth/current-github-identity";
 
 /**
  * Session-aware header (server component). Shows Dashboard + sign-out when
- * authenticated; just Docs otherwise. Display only — `user_name` is fine here.
+ * authenticated; just Docs otherwise. Display only — the login is fine here.
  */
 export async function SiteHeader() {
   let username = null;
   try {
-    const supabase = await createServerAuthClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    username = user?.user_metadata?.user_name ?? null;
+    const identity = await getCurrentGithubIdentity();
+    username = identity?.githubUsername ?? null;
   } catch {
-    username = null; // auth not configured (no env) — render signed-out header
+    username = null; // auth not configured (no secret) — render signed-out header
   }
 
   return (

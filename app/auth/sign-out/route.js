@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { createServerAuthClient } from "@/lib/supabase/server-client";
+import { clearSession } from "@/lib/auth/session";
 
 /**
- * Sign out: clear the Supabase session and redirect home.
+ * Sign out: clear the session cookie and redirect home. POST (the header uses a
+ * `method="post"` form); 303 turns the POST into a GET on the redirect.
  *
  * @param {Request} request
  */
 export async function POST(request) {
-  const supabase = await createServerAuthClient();
-  await supabase.auth.signOut();
+  await clearSession();
   return NextResponse.redirect(new URL("/", request.url), { status: 303 });
 }
