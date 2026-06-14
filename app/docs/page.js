@@ -51,7 +51,7 @@ console.log(data.choices[0].message.content);`;
       <h2>Limits</h2>
       <ul>
         <li>Capped at $10/day, resetting daily.</li>
-        <li>The key is shown only once at creation — store it somewhere safe.</li>
+        <li>Your key is stored — copy it again anytime from your dashboard.</li>
         <li>One key per GitHub account.</li>
       </ul>
     </main>

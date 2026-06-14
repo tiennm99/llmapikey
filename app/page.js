@@ -33,7 +33,7 @@ export default function HomePage() {
       <h2>How it works</h2>
       <ol className="steps">
         <li>Sign in with GitHub — we read only your public profile.</li>
-        <li>Generate your key — it&apos;s shown once, so copy it immediately.</li>
+        <li>Generate your key — copy it now or anytime from your dashboard.</li>
         <li>Call OpenRouter with your key. Capped at $10/day; resets daily.</li>
       </ol>
 

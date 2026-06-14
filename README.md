@@ -38,8 +38,10 @@ each capped at a daily USD limit. Key records live in a dedicated, unexposed
   depth). The app ships no anon DB client, so the isolation holds by construction.
 - **Reserve-then-mint:** a `pending` row is inserted (ON CONFLICT DO NOTHING)
   before minting, so concurrent double-submits yield exactly one OpenRouter key.
-- **Schema isolation:** `llmapikey` is NOT added to PostgREST exposed schemas;
-  RLS is deny-all as defense in depth.
+- **Key storage:** the raw key is stored in `openrouter_key` so users can copy it
+  again from the dashboard; `openrouter_delete_hash` is OpenRouter's revoke handle
+  (not a hash of the key). Keys are minted into the `OPENROUTER_WORKSPACE_ID`
+  workspace.
 - **Admin console:** route `/admin` (unlisted — no nav link) lists, searches,
   filters, revokes, and manually mints keys. Access is gated by the
   `ADMIN_GITHUB_USER_IDS` allowlist against the same numeric `provider_id`
@@ -67,13 +69,16 @@ each capped at a daily USD limit. Key records live in a dedicated, unexposed
    | `KEY_DAILY_LIMIT_USD` | Per-key daily cap sent to OpenRouter |
    | `KEY_EXPIRY_DAYS` | Key lifetime (sets `expires_at`) |
    | `ADMIN_GITHUB_USER_IDS` | Admin allowlist — numeric GitHub `provider_id`s, CSV (server-only) |
-3. **Database** — apply the migration to a **staging branch first**, then prod
-   (Supabase SQL editor or `psql "$POSTGRES_URL" -f ...`):
+3. **Database** — apply all migrations in order to a **staging branch first**,
+   then prod (Supabase SQL editor, `psql "$POSTGRES_URL" -f ...`, or
+   `node --env-file=.env.local scripts/run-migration.mjs <file>`):
    ```bash
    psql "$POSTGRES_URL" -f supabase/migrations/0001_llmapikey_schema_and_api_keys.up.sql
+   psql "$POSTGRES_URL" -f supabase/migrations/0002_api_keys_store_raw_key.up.sql
+   psql "$POSTGRES_URL" -f supabase/migrations/0003_rename_key_hash_to_delete_hash.up.sql
    ```
    Do NOT add `llmapikey` to the project's PostgREST "Exposed schemas".
-   Rollback: `...0001_...down.sql`.
+   Rollback: run the matching `*.down.sql` files in reverse order (0003 → 0001).
 4. **GitHub OAuth App** — register one at GitHub > Settings > Developer settings >
    OAuth Apps. Authorization callback URL points at the **app** (not Supabase):
    `https://llmapikey.vercel.app/auth/callback` for prod (use a separate dev app
