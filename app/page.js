@@ -7,8 +7,8 @@ import { SignInWithGithubButton } from "@/components/sign-in-with-github-button"
  * inline (not separate components) per the "inline static copy" rule.
  */
 export default function HomePage() {
-  const repoUrl = process.env.NEXT_PUBLIC_REPO_URL ?? "#";
-  const model = process.env.NEXT_PUBLIC_OPENROUTER_MODEL ?? "minimax/minimax-m3";
+  const repoUrl = "https://github.com/tiennm99/llmapikey";
+  const model = "minimax/minimax-m3";
 
   return (
     <main>

@@ -42,7 +42,7 @@ export default async function AdminPage({ searchParams }) {
       countApiKeys({ status: "pending" }),
     ]);
   } catch {
-    // DB unreachable (e.g. local without DATABASE_URL) — show an empty state
+    // DB unreachable (e.g. local without POSTGRES_URL) — show an empty state
     // rather than crashing, mirroring the dashboard's tolerance.
     dbError = true;
   }

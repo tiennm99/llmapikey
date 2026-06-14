@@ -4,7 +4,7 @@ export const metadata = { title: "Docs — llmapikey" };
  * Static usage guide: how to call OpenRouter with the issued key.
  */
 export default function DocsPage() {
-  const model = process.env.NEXT_PUBLIC_OPENROUTER_MODEL ?? "minimax/minimax-m3";
+  const model = "minimax/minimax-m3";
 
   const curlExample = `curl https://openrouter.ai/api/v1/chat/completions \\
   -H "Authorization: Bearer $OPENROUTER_KEY" \\

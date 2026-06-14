@@ -30,12 +30,12 @@ export default async function DashboardPage() {
     const row = await repo.findByGithubUserId(identity.githubUserId);
     if (row && row.status === "active") existingHint = row.key_hint;
   } catch {
-    // DB not reachable (e.g. local without DATABASE_URL) — show the panel; the
+    // DB not reachable (e.g. local without POSTGRES_URL) — show the panel; the
     // server action gates minting and reports a friendly error.
   }
 
-  const model = process.env.NEXT_PUBLIC_OPENROUTER_MODEL ?? "minimax/minimax-m3";
-  const repoUrl = process.env.NEXT_PUBLIC_REPO_URL ?? "#";
+  const model = "minimax/minimax-m3";
+  const repoUrl = "https://github.com/tiennm99/llmapikey";
 
   return (
     <main>
