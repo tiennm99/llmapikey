@@ -2,8 +2,8 @@
  * Reconcile OpenRouter provisioned keys against the DB registry.
  *
  * Reports:
- *  - Orphaned OpenRouter keys: minted by this app (name `llmapikey:*`) but with
- *    no matching DB row → a billable cost leak to revoke.
+ *  - Orphaned OpenRouter keys: minted by this app (name starts with
+ *    KEY_NAME_PREFIX) but with no matching DB row → a billable cost leak to revoke.
  *  - Dangling DB rows: an active row whose key was deleted out-of-band.
  *  - Stale pending rows: a reservation from an interrupted mint (>10 min old)
  *    that still has no key — would block that user until reclaimed.
@@ -13,6 +13,7 @@
  */
 import { getSql } from "../lib/db/postgres-client.js";
 import { listKeys } from "../lib/openrouter/provisioning-client.js";
+import { KEY_NAME_PREFIX } from "../lib/keys/key-name.js";
 
 async function main() {
   const sql = getSql();
@@ -24,7 +25,7 @@ async function main() {
   const dbHashes = new Set(dbRows.map((r) => r.openrouter_delete_hash).filter(Boolean));
   const orHashes = new Set(orKeys.map((k) => k.hash));
 
-  const appKeys = orKeys.filter((k) => typeof k.name === "string" && k.name.startsWith("llmapikey:"));
+  const appKeys = orKeys.filter((k) => typeof k.name === "string" && k.name.startsWith(KEY_NAME_PREFIX));
   const orphans = appKeys.filter((k) => !dbHashes.has(k.hash));
   const dangling = dbRows.filter((r) => r.openrouter_delete_hash && !orHashes.has(r.openrouter_delete_hash));
 
