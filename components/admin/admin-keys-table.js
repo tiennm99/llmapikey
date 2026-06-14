@@ -3,7 +3,7 @@ import { AdminKeyRowActions } from "./admin-key-row-actions";
 /**
  * Admin table: username, full key, status, created date. The full raw key is
  * shown here intentionally (admin-only, gated route). The delete handle
- * (`openrouter_key_hash`) is never rendered.
+ * (`openrouter_delete_hash`) is never rendered.
  *
  * @param {{ rows: import('@/lib/keys/api-keys-repository').ApiKeyRow[] }} props
  */

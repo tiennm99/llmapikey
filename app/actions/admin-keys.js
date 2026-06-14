@@ -35,9 +35,9 @@ export async function revokeKey(id) {
   const row = await repo.findById(id);
   if (!row) return { status: "error", message: "Key not found." };
 
-  if (row.openrouter_key_hash) {
+  if (row.openrouter_delete_hash) {
     try {
-      await deleteKey(row.openrouter_key_hash); // idempotent on 404
+      await deleteKey(row.openrouter_delete_hash); // idempotent on 404
     } catch {
       return { status: "error", message: "Could not revoke upstream key. Try again." };
     }

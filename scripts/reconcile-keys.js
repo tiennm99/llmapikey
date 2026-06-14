@@ -18,15 +18,15 @@ async function main() {
   const sql = getSql();
   const [orKeys, dbRows] = await Promise.all([
     listKeys(),
-    sql`select github_user_id, openrouter_key_hash, status, created_at from llmapikey.api_keys`,
+    sql`select github_user_id, openrouter_delete_hash, status, created_at from llmapikey.api_keys`,
   ]);
 
-  const dbHashes = new Set(dbRows.map((r) => r.openrouter_key_hash).filter(Boolean));
+  const dbHashes = new Set(dbRows.map((r) => r.openrouter_delete_hash).filter(Boolean));
   const orHashes = new Set(orKeys.map((k) => k.hash));
 
   const appKeys = orKeys.filter((k) => typeof k.name === "string" && k.name.startsWith("llmapikey:"));
   const orphans = appKeys.filter((k) => !dbHashes.has(k.hash));
-  const dangling = dbRows.filter((r) => r.openrouter_key_hash && !orHashes.has(r.openrouter_key_hash));
+  const dangling = dbRows.filter((r) => r.openrouter_delete_hash && !orHashes.has(r.openrouter_delete_hash));
 
   // Conservative window: the generate-key action self-reclaims at 2 min; report
   // only rows older than that so genuinely in-flight reservations aren't flagged.
@@ -39,7 +39,7 @@ async function main() {
   console.log(`Orphaned OpenRouter keys (no DB row → cost leak): ${orphans.length}`);
   for (const k of orphans) console.log(`  orphan  hash=${k.hash} name=${k.name}`);
   console.log(`Dangling DB rows (key deleted out-of-band): ${dangling.length}`);
-  for (const r of dangling) console.log(`  dangling github_user_id=${r.github_user_id} hash=${r.openrouter_key_hash}`);
+  for (const r of dangling) console.log(`  dangling github_user_id=${r.github_user_id} hash=${r.openrouter_delete_hash}`);
   console.log(`Stale pending rows (interrupted mint, blocks user): ${stalePending.length}`);
   for (const r of stalePending) console.log(`  stale-pending github_user_id=${r.github_user_id} created_at=${r.created_at}`);
 
