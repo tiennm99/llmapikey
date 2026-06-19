@@ -5,6 +5,7 @@ import "server-only";
 import { getCurrentGithubIdentity } from "@/lib/auth/current-github-identity";
 import * as repo from "@/lib/keys/api-keys-repository";
 import { mintAndPersist, numEnv } from "@/lib/keys/mint-key";
+import { keyMintingGateMessage } from "@/lib/project-status";
 
 /**
  * @typedef {Object} GenerateKeyResult
@@ -34,15 +35,15 @@ export async function generateKey() {
     return { status: "error", message: "Sign in with GitHub first." };
   }
 
+  const gateMessage = keyMintingGateMessage();
+  if (gateMessage) {
+    return { status: "error", message: gateMessage };
+  }
+
   // Idempotency fast-path: existing active key → return it, never mint again.
   const existing = await repo.findByGithubUserId(identity.githubUserId);
   if (existing && existing.status === "active") {
     return { status: "exists", rawKey: existing.openrouter_key, message: "You already have a key." };
-  }
-
-  // Feature gate: live minting stays OFF until the OpenRouter ToS gate clears.
-  if (process.env.PROVISIONING_ENABLED !== "true") {
-    return { status: "error", message: "Key giveaway is not live yet. Check back soon." };
   }
 
   // Sybil kill-switch (cheap early-out; re-checked authoritatively post-reserve).

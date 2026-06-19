@@ -3,9 +3,9 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 
 export const metadata = {
-  title: "llmapikey — free OpenRouter API key",
+  title: "llmapikey — pending OpenRouter API key giveaway",
   description:
-    "Get a free, capped OpenRouter API key — one per GitHub account. No signup beyond GitHub.",
+    "Pending free, capped OpenRouter API key giveaway — paused until a suitable provider is selected.",
 };
 
 /**

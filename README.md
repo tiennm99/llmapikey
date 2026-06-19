@@ -1,6 +1,6 @@
 # llmapikey
 
-Free, capped OpenRouter API key giveaway — one key per GitHub account.
+Pending free, capped OpenRouter API key giveaway — one key per GitHub account.
 
 Next.js (App Router, JS + JSDoc) on Vercel. App-native GitHub OAuth (Arctic +
 jose stateless signed-cookie session) — Supabase is the Postgres host only.
@@ -8,9 +8,11 @@ Per-user OpenRouter keys are minted from the owner's master Provisioning key,
 each capped at a daily USD limit. Key records live in a dedicated, unexposed
 `llmapikey` Postgres schema reached only by a server-side direct connection.
 
-> **Status:** code build only. Live key minting is gated behind
-> `PROVISIONING_ENABLED=false` until the OpenRouter ToS approval gate (plan
-> Phase 1) clears. Do not deploy a public giveaway before that.
+> **Status:** pending. Live key minting is gated behind
+> `PROJECT_STATUS=pending` and `PROVISIONING_ENABLED=false` until a suitable
+> provider is found. Official OpenRouter docs confirm BYOK has a 5% OpenRouter
+> fee after the first 1M BYOK requests per month (requests, not tokens), so this
+> giveaway is paused before public launch.
 
 ## Stack
 
@@ -36,6 +38,9 @@ each capped at a daily USD limit. Key records live in a dedicated, unexposed
 - **Schema isolation is structural:** the `llmapikey` schema is unexposed to
   PostgREST and reached only via the direct PG client (deny-all RLS as defense in
   depth). The app ships no anon DB client, so the isolation holds by construction.
+- **Project lifecycle gate:** `PROJECT_STATUS` defaults fail-closed to
+  `pending`; the UI hides self-serve key minting/retrieval while pending, and key
+  creation requires `PROJECT_STATUS=live` plus `PROVISIONING_ENABLED=true`.
 - **Reserve-then-mint:** a `pending` row is inserted (ON CONFLICT DO NOTHING)
   before minting, so concurrent double-submits yield exactly one OpenRouter key.
 - **Key storage:** the raw key is stored in `openrouter_key` so users can copy it
@@ -64,7 +69,8 @@ each capped at a daily USD limit. Key records live in a dedicated, unexposed
    | `POSTGRES_URL` | Supabase **transaction pooler** string (server-only; provisioned by the Supabase Vercel integration) |
    | `OPENROUTER_MANAGEMENT_KEY` | Master management/provisioning key (server-only) |
    | `OPENROUTER_WORKSPACE_ID` | Workspace minted keys are created in (create-key `workspace_id`); omit for the management key's default |
-   | `PROVISIONING_ENABLED` | `false` until Phase 1 ToS gate clears |
+   | `PROJECT_STATUS` | `pending` until a suitable provider is found; only `live` can enable the product |
+   | `PROVISIONING_ENABLED` | Lower-level minting flag; must be `true` in addition to `PROJECT_STATUS=live` |
    | `MAX_TOTAL_KEYS` | Kill-switch: stop minting past N active keys |
    | `KEY_DAILY_LIMIT_USD` | Per-key daily cap sent to OpenRouter |
    | `KEY_EXPIRY_DAYS` | Key lifetime (sets `expires_at`) |
@@ -94,10 +100,34 @@ each capped at a daily USD limit. Key records live in a dedicated, unexposed
    npm test         # unit tests
    ```
 
+## OpenRouter BYOK finding
+
+As of 2026-06-19, the rendered official OpenRouter docs say BYOK usage has a
+fee after the monthly waiver: the first 1M BYOK requests per month are free,
+then OpenRouter charges 5% of what the same model/provider would normally cost
+on OpenRouter, deducted from OpenRouter credits. This is documented as requests,
+not tokens.
+
+Independent research also confirmed the policy shape (request-based monthly
+waiver, then percentage fee from OpenRouter credits), but saw placeholders in
+OpenRouter's markdown docs for the exact threshold/percentage. Re-verify the
+rendered docs or ask OpenRouter support before setting `PROJECT_STATUS=live`.
+
+Implication: the public free-key giveaway stays pending until a provider can
+support the intended economics without surprise pass-through charges. See
+[`docs/project-status.md`](docs/project-status.md).
+
+Sources:
+
+- https://openrouter.ai/docs/guides/overview/auth/byok
+- https://openrouter.ai/docs/faq
+
 ## Deploy (gated)
 
 Git-triggered builds on Vercel are enabled (`vercel.json` →
 `git.deploymentEnabled: true`). Builds and deploys do NOT start the giveaway:
-live key minting is gated independently by `PROVISIONING_ENABLED`. Keep
-`PROVISIONING_ENABLED=false` in the Vercel environment until the Phase 1
-OpenRouter ToS gate clears; only then set it `true` to begin minting.
+live key minting is gated independently by `PROJECT_STATUS` and
+`PROVISIONING_ENABLED`. Keep `PROJECT_STATUS=pending` and
+`PROVISIONING_ENABLED=false` in the Vercel environment until provider economics
+are accepted; only then set `PROJECT_STATUS=live` and `PROVISIONING_ENABLED=true`
+to begin minting.

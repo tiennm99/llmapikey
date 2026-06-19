@@ -1,6 +1,9 @@
 import Link from "next/link";
 
 import { SignInWithGithubButton } from "@/components/sign-in-with-github-button";
+import { isProjectLive, projectPendingMessage } from "@/lib/project-status";
+
+export const dynamic = "force-dynamic";
 
 /**
  * Landing page. Static copy + sign-in CTA. Star nudge and how-it-works are
@@ -9,6 +12,31 @@ import { SignInWithGithubButton } from "@/components/sign-in-with-github-button"
 export default function HomePage() {
   const repoUrl = "https://github.com/tiennm99/llmapikey";
   const model = "minimax/minimax-m3";
+  const projectLive = isProjectLive();
+
+  if (!projectLive) {
+    return (
+      <main>
+        <h1>llmapikey is pending</h1>
+        <p>
+          The free OpenRouter key giveaway is paused while we look for a provider
+          that can support this safely.
+        </p>
+
+        <div className="panel status-panel">
+          <p className="warn">{projectPendingMessage()}</p>
+          <p className="muted">
+            OpenRouter BYOK remains useful for personal routing, but the current
+            pass-through fee model makes a public free-key giveaway unsafe.
+          </p>
+        </div>
+
+        <p>
+          <Link href="/docs">Read the current status notes →</Link>
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main>

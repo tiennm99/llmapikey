@@ -6,6 +6,7 @@ import { requireAdminIdentity } from "@/lib/auth/is-admin";
 import * as repo from "@/lib/keys/api-keys-repository";
 import { mintAndPersist, numEnv } from "@/lib/keys/mint-key";
 import { deleteKey } from "@/lib/openrouter/provisioning-client";
+import { keyMintingGateMessage } from "@/lib/project-status";
 
 /**
  * Admin actions over the `api_keys` registry. EVERY action re-gates with
@@ -49,8 +50,9 @@ export async function revokeKey(id) {
 
 /**
  * Manually mint a key for an arbitrary GitHub user (admin override). Reuses the
- * shared reserve→mint→activate flow and honors PROVISIONING_ENABLED and the
- * MAX_TOTAL_KEYS ceiling, exactly like the self-serve path.
+ * shared reserve→mint→activate flow and honors PROJECT_STATUS,
+ * PROVISIONING_ENABLED, and the MAX_TOTAL_KEYS ceiling, exactly like the
+ * self-serve path.
  *
  * @param {{ githubUserId: string, githubUsername: string }} params
  * @returns {Promise<AdminActionResult>}
@@ -66,14 +68,15 @@ export async function adminCreateKey({ githubUserId, githubUsername } = {}) {
   }
   const username = String(githubUsername ?? "").trim() || userId;
 
+  const gateMessage = keyMintingGateMessage();
+  if (gateMessage) {
+    return { status: "error", message: gateMessage };
+  }
+
   // Idempotency: an existing active key is never re-minted.
   const existing = await repo.findByGithubUserId(userId);
   if (existing && existing.status === "active") {
     return { status: "exists", keyHint: existing.key_hint, message: "User already has a key." };
-  }
-
-  if (process.env.PROVISIONING_ENABLED !== "true") {
-    return { status: "error", message: "Key giveaway is not live yet. Check back soon." };
   }
 
   const maxKeys = numEnv("MAX_TOTAL_KEYS", 0);

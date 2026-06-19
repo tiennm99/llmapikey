@@ -66,6 +66,10 @@ header.site-header {
   margin: 1rem 0;
 }
 
+.status-panel {
+  border-color: rgba(240, 180, 41, 0.55);
+}
+
 .btn {
   display: inline-block;
   background: var(--accent-strong);

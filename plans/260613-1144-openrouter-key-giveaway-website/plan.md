@@ -16,13 +16,13 @@ source: skill
 
 ## Overview
 
-Next.js (App Router, JS + JSDoc) site on Vercel. Gives developers a $10/day-capped OpenRouter API key — one per GitHub account — minted from owner's master Provisioning key, backed by owner's BYOK monthly subscription. Supabase only (dedicated `llmapikey` schema in a shared project, server-only access) for auth + key records. No proxy: OpenRouter enforces the cap. Soft star nudge (not enforced).
+Next.js (App Router, JS + JSDoc) site on Vercel. Intended to give developers a $10/day-capped API key — one per GitHub account — minted from owner's master key, backed by a suitable provider. The original OpenRouter BYOK-backed path is pending because OpenRouter now documents a 5% BYOK fee after the first 1M BYOK requests per month. Supabase only (dedicated `llmapikey` schema in a shared project, server-only access) for auth + key records. No proxy.
 
 **Cost model caveat (verify in Phase 1):** "free to users" — owner pays. OpenRouter BYOK still bills ~5% of model cost to OpenRouter credits and can fall back to paid endpoints, so "strictly free for the owner" is UNVERIFIED. The "$10/day" cap basis and zero-balance BYOK behavior are open questions for OpenRouter support (Phase 1). Owner's subscription cap is the global $ ceiling.
 
 **Source:** `plans/reports/brainstorm-summary-260613-1144-openrouter-key-giveaway-website-report.md`
 
-**GATING:** Phase 1 (ToS Approval Gate) blocks all build phases. If OpenRouter support rejects the free key-giveaway model, the plan is **cancelled** — do not build.
+**GATING:** Project pending until a suitable provider is found. Runtime key creation requires `PROJECT_STATUS=live` and `PROVISIONING_ENABLED=true`. Keep both closed while provider economics are unresolved.
 
 **Scope OUT (v1):** proxy, payments, GLM/Kimi, per-model restriction, admin analytics, star enforcement.
 
@@ -37,32 +37,33 @@ Next.js (App Router, JS + JSDoc) site on Vercel. Gives developers a $10/day-capp
 | 5 | [Pages and UI](./phase-05-pages-and-ui.md) | Code complete |
 | 6 | [Test and Deploy](./phase-06-test-and-deploy.md) | Code+tests done; live E2E + deploy deferred |
 
-## Implementation Status (2026-06-13)
+## Implementation Status (2026-06-19)
 
-Built code-only at user direction ("just build, I won't deploy yet"); Phase 1
-ToS gate intentionally NOT cleared, live minting gated behind
-`PROVISIONING_ENABLED=false`, Vercel auto-deploy disabled (`vercel.json`).
+Scaffold, app-native GitHub OAuth, DB migrations, key mint/reconcile/admin flows,
+pages, and tests are code-complete in this repo, but public launch is pending.
 
-**Build/test:** `next build` green (7 routes); `npm test` 6 pass / 1 skip (RLS
-test needs live Supabase). Code review: all 8 acceptance criteria verified; 2
-HIGH lifecycle bugs found and fixed (stuck-pending lockout recovery; kill-switch
-now counts pending+active with post-reserve re-check).
+Provider economics gate intentionally NOT cleared. Live minting is gated behind
+`PROJECT_STATUS=pending` and `PROVISIONING_ENABLED=false`.
+
+**Build/test:** historical `next build` green (7 routes); `npm test` 6 pass / 1
+skip before this status update. Current verification should be rerun after every
+status-gate change.
 
 **Deviation from plan (Phase 2):** the `api_keys` table is reached via a direct
-Postgres connection (`postgres` npm + `DATABASE_URL`), NOT the service-role
+Postgres connection (`postgres` npm + `POSTGRES_URL`), NOT the service-role
 supabase-js client. Reason: the plan required the `llmapikey` schema to stay
 unexposed to PostgREST, but supabase-js cannot query an unexposed schema. Direct
 PG keeps the schema fully hidden (a stronger realization of the same intent) and
-removes the service-role blast-radius concern. Env vars changed accordingly:
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`
-(no `SUPABASE_SERVICE_ROLE_KEY`).
+removes the service-role blast-radius concern.
 
-**Still requires (post-Phase-1, before public launch):** apply migration to a
-real DB, register GitHub OAuth app + Supabase provider, set live env +
-`PROVISIONING_ENABLED=true`, run the RLS deny-all test against real Supabase,
-create→delete round-trip on a throwaway key, manual E2E (sign-in → generate →
-call model → re-generate idempotent → concurrent double-submit = one key),
-dashboard verification (limit/daily-reset/BYOK), and function-log redaction grep.
+**Still requires, before public launch:** find/approve provider economics,
+re-verify any OpenRouter BYOK thresholds/fees if OpenRouter remains in scope,
+apply migration to a real DB, register GitHub OAuth app, set live env
+(`PROJECT_STATUS=live`, `PROVISIONING_ENABLED=true`), run the RLS deny-all test
+against real Supabase, create-delete round-trip on a throwaway key, manual E2E
+(sign-in -> generate -> call model -> re-generate idempotent -> concurrent
+double-submit = one key), dashboard verification (limit/daily-reset/billing),
+and function-log redaction grep.
 
 ## Dependencies
 
